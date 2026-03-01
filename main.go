@@ -32,10 +32,12 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 func handleHTTPS(w http.ResponseWriter, r *http.Request) {
 	log.Printf("HTTPS %s %s -> %s", r.Method, r.URL.String(), r.Host)
 
-	// The HTTP CONNECT method is used to create an HTTP
-	// tunnel through a proxy server. By sending an HTTP
-	// CONNECT request, the client asks the proxy server
-	// to forward the TCP connection
+	// When the client uses HTTPs, proxy would not read
+	// anything if the client sent encrypted data. As such,
+	// the client requests the proxy to start a tunnel with
+	// method CONNECT (specifically designed for such task)
+	// After opening a TCP connection with remote destination,
+	// just relay TCP incoming data in both directions
 
 	host := r.Host
 	if !strings.Contains(host, ":") {
@@ -82,6 +84,15 @@ func handleHTTPS(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleHTTP(w http.ResponseWriter, r *http.Request) {
+
+	// When the client uses HTTP, proxy can read anything.
+	// As such, proxy reads remote destination, open a TCP
+	// connection and simply replicates messages the client
+	// is sending
+	// Theoritically, the proxy can also mangle requests,
+	// but the following implementation acts as a simple
+	// mirror
+
 	log.Printf("HTTP %s %s -> %s", r.Method, r.URL.String(), r.Host)
 
 	host := r.Host
